@@ -1,0 +1,14 @@
+# Normalize text files and enforce sane line endings
+* text=auto
+
+# Shell scripts must be LF for /usr/bin/env and systemd
+*.sh text eol=lf
+
+# PowerShell scripts are OK with CRLF
+*.ps1 text eol=crlf
+
+# Markdown
+*.md text eol=lf
+
+# JSON
+*.json text eol=lf
