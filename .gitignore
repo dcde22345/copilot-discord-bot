@@ -4,9 +4,17 @@
 
 # Local data
 /data/
-**/data/
 *.sqlite
 *.db
+
+# Dependencies
+node_modules/
+
+# Local environment and agent config
+.env
+.codex/
+.mcp.json
+opencode.json
 
 # User-specific files
 *.user

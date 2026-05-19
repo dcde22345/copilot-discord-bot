@@ -35,11 +35,13 @@ if ($svc) {
 
 if ($RemoveEnv) {
   Write-Host "Removing machine environment variables ..."
-  [Environment]::SetEnvironmentVariable("Bot__DiscordBotToken", $null, "Machine")
-  [Environment]::SetEnvironmentVariable("Bot__ReposRoot", $null, "Machine")
-  [Environment]::SetEnvironmentVariable("Bot__DataDir", $null, "Machine")
-  [Environment]::SetEnvironmentVariable("Bot__OwnerDiscordUserId", $null, "Machine")
-  [Environment]::SetEnvironmentVariable("Bot__CopilotCliPath", $null, "Machine")
+  [Environment]::SetEnvironmentVariable("DISCORD_BOT_TOKEN", $null, "Machine")
+  [Environment]::SetEnvironmentVariable("REPOS_ROOT", $null, "Machine")
+  [Environment]::SetEnvironmentVariable("DATA_DIR", $null, "Machine")
+  [Environment]::SetEnvironmentVariable("OWNER_DISCORD_USER_ID", $null, "Machine")
+  [Environment]::SetEnvironmentVariable("COPILOT_CLI_PATH", $null, "Machine")
+  [Environment]::SetEnvironmentVariable("PORT", $null, "Machine")
+  [Environment]::SetEnvironmentVariable("HOST", $null, "Machine")
 }
 
 if ($RemoveFiles -and (Test-Path $InstallDir)) {

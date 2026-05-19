@@ -6,7 +6,8 @@ INSTALL_DIR="/opt/copilot-discord-bot"
 APP_DIR="$INSTALL_DIR/app"
 DATA_DIR="/var/lib/copilot-discord-bot"
 ENV_FILE="/etc/copilot-discord-bot.env"
-URLS="http://127.0.0.1:5000"
+PORT="5000"
+HOST="127.0.0.1"
 RUN_USER=""
 REPOS_ROOT=""
 COPILOT_CLI_PATH=""
@@ -21,12 +22,14 @@ Options:
   --install-dir <path>     Install dir (default: $INSTALL_DIR)
   --data-dir <path>        Data dir (default: $DATA_DIR)
   --env-file <path>        Env file path (default: $ENV_FILE)
-  --urls <urls>            ASP.NET urls (default: $URLS)
+  --port <port>            HTTP port (default: $PORT)
+  --host <host>            HTTP host (default: $HOST)
   --copilot-cli <path>     Optional explicit copilot CLI path
 
 This script will:
-- dotnet publish into the install dir
-- create an env file (mode 600) with Bot__* vars
+- npm install + build (tsc) the TypeScript source
+- copy the output into the install dir
+- create an env file (mode 600) with DISCORD_BOT_TOKEN and other vars
 - install and enable a systemd service ($SERVICE_NAME)
 EOF
 }
@@ -45,7 +48,8 @@ while [[ $# -gt 0 ]]; do
     --install-dir) INSTALL_DIR="$2"; APP_DIR="$INSTALL_DIR/app"; shift 2;;
     --data-dir) DATA_DIR="$2"; shift 2;;
     --env-file) ENV_FILE="$2"; shift 2;;
-    --urls) URLS="$2"; shift 2;;
+    --port) PORT="$2"; shift 2;;
+    --host) HOST="$2"; shift 2;;
     --copilot-cli) COPILOT_CLI_PATH="$2"; shift 2;;
     -h|--help) usage; exit 0;;
     *) echo "Unknown arg: $1"; usage; exit 1;;
@@ -63,23 +67,33 @@ if [[ -z "$REPOS_ROOT" ]]; then
   exit 1
 fi
 
-if ! command -v dotnet >/dev/null 2>&1; then
-  echo "ERROR: dotnet not found. Install .NET 10 runtime/SDK first." >&2
+if ! command -v node >/dev/null 2>&1; then
+  echo "ERROR: node not found. Install Node.js 18+ first." >&2
+  exit 1
+fi
+
+if ! command -v npm >/dev/null 2>&1; then
+  echo "ERROR: npm not found. Install Node.js 18+ first." >&2
   exit 1
 fi
 
 PROJECT_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
-APP_PROJECT="$PROJECT_ROOT/src/CopilotDiscordBot/CopilotDiscordBot.csproj"
 
 mkdir -p "$APP_DIR" "$DATA_DIR"
 chown -R "$RUN_USER":"$RUN_USER" "$DATA_DIR"
 
-echo "Publishing to $APP_DIR ..."
-DOTNET_CLI_HOME="/tmp" dotnet publish "$APP_PROJECT" -c Release -o "$APP_DIR" >/dev/null
+echo "Installing dependencies and building ..."
+(cd "$PROJECT_ROOT" && npm ci && npm run build)
 
-DLL="$APP_DIR/CopilotDiscordBot.dll"
-if [[ ! -f "$DLL" ]]; then
-  echo "ERROR: publish output missing: $DLL" >&2
+echo "Copying build output to $APP_DIR ..."
+cp -r "$PROJECT_ROOT/dist" "$APP_DIR/"
+cp "$PROJECT_ROOT/package.json" "$APP_DIR/"
+cp "$PROJECT_ROOT/package-lock.json" "$APP_DIR/" 2>/dev/null || true
+(cd "$APP_DIR" && npm ci --omit=dev)
+
+ENTRY="$APP_DIR/dist/index.js"
+if [[ ! -f "$ENTRY" ]]; then
+  echo "ERROR: build output missing: $ENTRY" >&2
   exit 1
 fi
 
@@ -96,14 +110,16 @@ echo
 umask 077
 cat > "$ENV_FILE" <<EOF
 # Copilot Discord Bot service environment
-Bot__DiscordBotToken=$DISCORD_TOKEN
-Bot__OwnerDiscordUserId=$OWNER_ID
-Bot__ReposRoot=$REPOS_ROOT
-Bot__DataDir=$DATA_DIR/data
+DISCORD_BOT_TOKEN=$DISCORD_TOKEN
+OWNER_DISCORD_USER_ID=$OWNER_ID
+REPOS_ROOT=$REPOS_ROOT
+DATA_DIR=$DATA_DIR/data
+PORT=$PORT
+HOST=$HOST
 EOF
 
 if [[ -n "$COPILOT_CLI_PATH" ]]; then
-  echo "Bot__CopilotCliPath=$COPILOT_CLI_PATH" >> "$ENV_FILE"
+  echo "COPILOT_CLI_PATH=$COPILOT_CLI_PATH" >> "$ENV_FILE"
 fi
 if [[ -n "$GH_TOKEN" ]]; then
   echo "GH_TOKEN=$GH_TOKEN" >> "$ENV_FILE"
@@ -111,8 +127,8 @@ fi
 
 chmod 600 "$ENV_FILE"
 
+NODE_PATH="$(command -v node)"
 SERVICE_FILE="/etc/systemd/system/$SERVICE_NAME.service"
-DOTNET_PATH="$(command -v dotnet)"
 
 cat > "$SERVICE_FILE" <<EOF
 [Unit]
@@ -125,7 +141,7 @@ Type=simple
 User=$RUN_USER
 WorkingDirectory=$APP_DIR
 EnvironmentFile=$ENV_FILE
-ExecStart=$DOTNET_PATH $DLL --urls $URLS
+ExecStart=$NODE_PATH $ENTRY
 Restart=always
 RestartSec=3
 
@@ -137,5 +153,5 @@ systemctl daemon-reload
 systemctl enable "$SERVICE_NAME" >/dev/null
 systemctl restart "$SERVICE_NAME" >/dev/null
 
-echo "Done. Check: systemctl status $SERVICE_NAME" 
-echo "Health: $URLS/health"
+echo "Done. Check: systemctl status $SERVICE_NAME"
+echo "Health: http://$HOST:$PORT/health"

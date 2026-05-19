@@ -1,0 +1,12 @@
+interface:
+  display_name: "Plane design doc"
+  short_description: "HTML design docs for Plane via MCP"
+  default_prompt: "Use $create-plane-design-doc to draft a design page and publish it to Plane."
+
+dependencies:
+  tools:
+    - type: "mcp"
+      value: "user-plane"
+      description: "Plane workspace API (create_project_page and related tools)"
+      transport: "stdio"
+      url: ""

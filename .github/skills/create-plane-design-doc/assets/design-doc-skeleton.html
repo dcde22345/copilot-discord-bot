@@ -1,0 +1,54 @@
+<h2>1. Overview</h2>
+<p><!-- Short context: scope, stack, data store. --></p>
+
+<h2>2. Flow</h2>
+<p><!-- One sentence: what this sequence shows (sequential happy path). --></p>
+<pre style="font-family:monospace;font-size:12px;background:#f4f4f5;padding:12px;border-radius:6px;line-height:1.45;overflow:auto;"><code>sequenceDiagram
+  participant U as User
+  participant C as Client
+  participant R as POST /api/example
+  U-&gt;&gt;C: trigger
+  C-&gt;&gt;R: JSON body
+  R--&gt;&gt;C: 201 + body
+</code></pre>
+
+<h2>3. Schema</h2>
+<p><!-- Tables touched by the flow in section 2. --></p>
+<table style="border-collapse:collapse;width:100%;font-size:13px;">
+<thead>
+<tr style="border-bottom:2px solid #ccc;">
+<th style="text-align:left;padding:8px;">Table</th>
+<th style="text-align:left;padding:8px;">Role</th>
+</tr>
+</thead>
+<tbody>
+<tr style="border-bottom:1px solid #eee;"><td style="padding:8px;"><code>example_table</code></td><td style="padding:8px;"><!-- One line. --></td></tr>
+</tbody>
+</table>
+
+<h2>4. API contracts</h2>
+<p><!-- Endpoints on the path in section 2. --></p>
+<table style="border-collapse:collapse;width:100%;font-size:12px;">
+<thead>
+<tr style="border-bottom:2px solid #ccc;">
+<th style="text-align:left;padding:6px;">Operation</th>
+<th style="text-align:left;padding:6px;">Method &amp; path</th>
+<th style="text-align:left;padding:6px;">Auth</th>
+<th style="text-align:left;padding:6px;">Request</th>
+<th style="text-align:left;padding:6px;">Success</th>
+<th style="text-align:left;padding:6px;">Client error</th>
+</tr>
+</thead>
+<tbody>
+<tr style="vertical-align:top;">
+<td style="padding:8px;"><!-- label --></td>
+<td style="padding:8px;"><code>POST /api/example</code></td>
+<td style="padding:8px;"><!-- --></td>
+<td style="padding:8px;"><!-- body fields --></td>
+<td style="padding:8px;"><code>201</code> <code><!-- body shape --></code></td>
+<td style="padding:8px;"><code>400</code> <!-- ... --></td>
+</tr>
+</tbody>
+</table>
+
+<p style="font-size:12px;margin-top:16px;"><!-- Optional: created date. --></p>

@@ -1,0 +1,54 @@
+import { z } from "zod";
+declare const BotConfigSchema: z.ZodObject<{
+    DISCORD_BOT_TOKEN: z.ZodDefault<z.ZodString>;
+    OWNER_DISCORD_USER_ID: z.ZodEffects<z.ZodOptional<z.ZodString>, bigint, string | undefined>;
+    REPOS_ROOT: z.ZodDefault<z.ZodString>;
+    DATA_DIR: z.ZodDefault<z.ZodString>;
+    DEFAULT_MODEL: z.ZodDefault<z.ZodString>;
+    COPILOT_CLI_PATH: z.ZodOptional<z.ZodString>;
+    DEFAULT_AUTO_APPROVE_PERMISSIONS: z.ZodEffects<z.ZodOptional<z.ZodString>, boolean, string | undefined>;
+    AUTO_APPROVE_READ_PERMISSIONS: z.ZodEffects<z.ZodOptional<z.ZodString>, boolean, string | undefined>;
+    TURN_TIMEOUT_SECONDS: z.ZodEffects<z.ZodOptional<z.ZodString>, number, string | undefined>;
+    DEBUG_PERMISSION_PAYLOAD: z.ZodEffects<z.ZodOptional<z.ZodString>, boolean, string | undefined>;
+    PORT: z.ZodEffects<z.ZodOptional<z.ZodString>, number, string | undefined>;
+    HOST: z.ZodDefault<z.ZodString>;
+    OPENAI_API_KEY: z.ZodOptional<z.ZodString>;
+    EMBEDDING_MODEL: z.ZodDefault<z.ZodString>;
+    RAG_TOP_K: z.ZodEffects<z.ZodOptional<z.ZodString>, number, string | undefined>;
+}, "strip", z.ZodTypeAny, {
+    DISCORD_BOT_TOKEN: string;
+    OWNER_DISCORD_USER_ID: bigint;
+    REPOS_ROOT: string;
+    DATA_DIR: string;
+    DEFAULT_MODEL: string;
+    DEFAULT_AUTO_APPROVE_PERMISSIONS: boolean;
+    AUTO_APPROVE_READ_PERMISSIONS: boolean;
+    TURN_TIMEOUT_SECONDS: number;
+    DEBUG_PERMISSION_PAYLOAD: boolean;
+    PORT: number;
+    HOST: string;
+    EMBEDDING_MODEL: string;
+    RAG_TOP_K: number;
+    COPILOT_CLI_PATH?: string | undefined;
+    OPENAI_API_KEY?: string | undefined;
+}, {
+    DISCORD_BOT_TOKEN?: string | undefined;
+    OWNER_DISCORD_USER_ID?: string | undefined;
+    REPOS_ROOT?: string | undefined;
+    DATA_DIR?: string | undefined;
+    DEFAULT_MODEL?: string | undefined;
+    COPILOT_CLI_PATH?: string | undefined;
+    DEFAULT_AUTO_APPROVE_PERMISSIONS?: string | undefined;
+    AUTO_APPROVE_READ_PERMISSIONS?: string | undefined;
+    TURN_TIMEOUT_SECONDS?: string | undefined;
+    DEBUG_PERMISSION_PAYLOAD?: string | undefined;
+    PORT?: string | undefined;
+    HOST?: string | undefined;
+    OPENAI_API_KEY?: string | undefined;
+    EMBEDDING_MODEL?: string | undefined;
+    RAG_TOP_K?: string | undefined;
+}>;
+export type BotConfig = z.infer<typeof BotConfigSchema>;
+export declare function loadConfig(): BotConfig;
+export {};
+//# sourceMappingURL=config.d.ts.map

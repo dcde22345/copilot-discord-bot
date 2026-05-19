@@ -5,14 +5,14 @@ Use GitHub Copilot from your phone by chatting in Discord.
 You run this bot on a server/PC (home lab, VM, cloud box) that has:
 
 - GitHub Copilot CLI + authentication
-- Your repos under a configured root folder (`Bot:ReposRoot`)
+- Your repos under a configured root folder (`REPOS_ROOT`)
 
 Then you use Discord mobile to:
 
 - Create a session (Discord thread)
-- Pick a repo with reactions (1️⃣..🔟)
-- Approve/deny tool actions with reactions (👍/👎)
-- Watch a single “CLI panel” status message update in-place
+- Pick a repo with reactions (1..10)
+- Approve/deny tool actions with reactions (thumbs up/thumbs down)
+- Watch a single "CLI panel" status message update in-place
 
 ## Demo
 
@@ -28,20 +28,20 @@ Video: [media/copilot-discord-bot.mp4](media/copilot-discord-bot.mp4)
 
 - **Emoji-first UX**: threads + reactions work great on mobile.
 - **Single status panel**: no spam; one message edits in-place.
-- **Repo sandbox**: agent work is scoped under `Bot:ReposRoot`.
-- **Interactive approvals**: prompts show what’s being approved.
+- **Repo sandbox**: agent work is scoped under `REPOS_ROOT`.
+- **Interactive approvals**: prompts show what's being approved.
 
 ## Security model (read this)
 
-- Set `Bot:OwnerDiscordUserId` (recommended). If set, the bot ignores everyone else.
-- Keep `Bot:ReposRoot` tight. The bot should only see repos you want it to touch.
+- Set `OWNER_DISCORD_USER_ID` (recommended). If set, the bot ignores everyone else.
+- Keep `REPOS_ROOT` tight. The bot should only see repos you want it to touch.
 - Keep approvals on (`cp approve ask`) unless you fully trust your tools + repos.
-- Optional: `Bot:AutoApproveReadPermissions=true` reduces prompt spam for read-only actions.
+- Optional: `AUTO_APPROVE_READ_PERMISSIONS=true` reduces prompt spam for read-only actions.
 
 ## Prereqs
 
-- .NET 10 (SDK or runtime)
-  - Verify: `dotnet --version` should be `10.x`
+- Node.js 18 or later
+  - Verify: `node --version` should be `18.x` or later
 - GitHub Copilot CLI installed on the server and authenticated
   - Verify: `copilot --version` (should not prompt)
   - Authenticate (interactive): run `copilot` once and complete sign-in
@@ -56,7 +56,7 @@ In the Discord Developer Portal:
 2. Create a Bot and copy the token
 3. Enable **Privileged Gateway Intents**:
    - Message Content Intent (required)
-4. Invite the bot to your server (OAuth2 → URL Generator):
+4. Invite the bot to your server (OAuth2 -> URL Generator):
    - Scopes: `bot`
    - Permissions (minimum recommended):
      - View Channels
@@ -69,70 +69,96 @@ In the Discord Developer Portal:
 
 ## Configure
 
-You can put defaults in [src/CopilotDiscordBot/appsettings.json](src/CopilotDiscordBot/appsettings.json), but for production it’s recommended to use **environment variables** (especially when running as a service).
+Copy `.env.example` to `.env` and fill in the values:
 
-Required settings:
+```sh
+cp .env.example .env
+```
 
-- `Bot:DiscordBotToken` – your bot token
-- `Bot:OwnerDiscordUserId` – your Discord user id (recommended)
-- `Bot:ReposRoot` – root folder containing repos (example: `e:\\Git`)
+Required variables:
 
-Environment variable equivalents:
+- `DISCORD_BOT_TOKEN` — your bot token
+- `OWNER_DISCORD_USER_ID` — your Discord user ID (recommended)
+- `REPOS_ROOT` — root folder containing repos (example: `/home/user/git`)
 
-- `Bot__DiscordBotToken`
-- `Bot__OwnerDiscordUserId`
-- `Bot__ReposRoot`
-- `Bot__DataDir` (recommended to set to an absolute path when running as a service)
+All configuration variables (with defaults):
 
-Dev-friendly option (user-secrets), from repo root:
-
-- `dotnet user-secrets set "Bot:DiscordBotToken" "YOUR_TOKEN" --project src/CopilotDiscordBot/CopilotDiscordBot.csproj`
-- `dotnet user-secrets set "Bot:OwnerDiscordUserId" "123456789012345678" --project src/CopilotDiscordBot/CopilotDiscordBot.csproj`
-- `dotnet user-secrets set "Bot:ReposRoot" "e:\\Git" --project src/CopilotDiscordBot/CopilotDiscordBot.csproj`
+| Variable | Default | Description |
+|---|---|---|
+| `DISCORD_BOT_TOKEN` | _(required)_ | Discord bot token |
+| `OWNER_DISCORD_USER_ID` | _(optional)_ | Only this user can control the bot |
+| `REPOS_ROOT` | _(required)_ | Root folder of all repos |
+| `DATA_DIR` | `data` | SQLite + Copilot session state directory |
+| `DEFAULT_MODEL` | `gpt-5` | Default Copilot model |
+| `COPILOT_CLI_PATH` | _(uses PATH)_ | Explicit path to Copilot CLI |
+| `DEFAULT_AUTO_APPROVE_PERMISSIONS` | `false` | Auto-approve all permission requests |
+| `AUTO_APPROVE_READ_PERMISSIONS` | `true` | Auto-approve read-only requests |
+| `TURN_TIMEOUT_SECONDS` | `900` | Seconds before a turn times out |
+| `DEBUG_PERMISSION_PAYLOAD` | `false` | Show debug info in permission prompts |
+| `PORT` | `5000` | HTTP server port |
+| `HOST` | `127.0.0.1` | HTTP server host |
 
 ## Run (dev)
 
 From repo root:
 
-- `dotnet run -c Release --project src/CopilotDiscordBot/CopilotDiscordBot.csproj`
+```sh
+npm install
+npm run dev
+```
 
 Health endpoint:
 
 - `http://localhost:5000/health`
 
+## Build
+
+```sh
+npm run build
+npm start
+```
+
 ## Install as a background service (recommended)
 
-These scripts publish the app, set environment variables, and register an always-on service.
+These scripts build the app, set environment variables, and register an always-on service.
 
 ### Windows (Windows Service)
 
 Run from an **elevated PowerShell**:
 
-- `powershell -ExecutionPolicy Bypass -File .\\scripts\\install-service-windows.ps1`
+```powershell
+powershell -ExecutionPolicy Bypass -File .\scripts\install-service-windows.ps1
+```
 
 Common options:
 
-- `-ReposRoot "E:\\Git"`
+- `-ReposRoot "E:\Git"`
 - `-OwnerDiscordUserId 123456789012345678`
 - `-GhToken "..."` (recommended for services)
-- `-CopilotCliPath "C:\\Path\\to\\copilot.exe"`
+- `-CopilotCliPath "C:\Path\to\copilot.exe"`
 
 Uninstall:
 
-- `powershell -ExecutionPolicy Bypass -File .\\scripts\\uninstall-service-windows.ps1`
+```powershell
+powershell -ExecutionPolicy Bypass -File .\scripts\uninstall-service-windows.ps1
+```
 
 ### Linux (systemd)
 
 Make scripts executable and run with sudo:
 
-- `chmod +x scripts/*.sh`
-- `sudo ./scripts/install-service-linux.sh --user <username> --repos-root /path/to/repos`
+```sh
+chmod +x scripts/*.sh
+sudo ./scripts/install-service-linux.sh --user <username> --repos-root /path/to/repos
+```
 
-The installer writes an env file at `/etc/copilot-discord-bot.env` (mode 600) and creates a systemd unit.
+The installer builds the project, copies output to the install directory, writes an env file at `/etc/copilot-discord-bot.env` (mode 600) and creates a systemd unit.
 
 Uninstall:
 
-- `sudo ./scripts/uninstall-service-linux.sh --remove-env`
+```sh
+sudo ./scripts/uninstall-service-linux.sh --remove-env
+```
 
 ## Use it (emoji-first)
 
@@ -148,7 +174,7 @@ The bot creates a **thread** (that thread is the session) and posts a repo picke
 
 In the session thread:
 
-- React with **1️⃣..🔟** on the repo picker message.
+- React with **1..10** on the repo picker message.
 
 Fallback: `cp repo <path>`
 
@@ -156,7 +182,7 @@ Fallback: `cp repo <path>`
 
 Just send normal messages in the thread.
 
-You’ll see a single status panel updated in-place (state/repo/model/doing).
+You will see a single status panel updated in-place (state/repo/model/doing).
 
 ### Change model
 
@@ -169,27 +195,27 @@ In the session thread:
 
 When Copilot requests permission, the bot posts a prompt message.
 
-- React **👍** to approve
-- React **👎** to deny
+- React **thumbs up** to approve
+- React **thumbs down** to deny
 
 ## Troubleshooting
 
-### "StreamJsonRpc.ConnectionLostException" on first message
+### Copilot runtime failed to start
 
 This usually means the `copilot` process exited immediately (often because PATH resolved to a VS Code shim that prints an interactive install prompt).
 
-- Run `where copilot` (Windows) and verify it points to the winget-installed `copilot.exe`
+- Run `which copilot` (Linux/Mac) or `where copilot` (Windows) and verify it points to the installed `copilot` binary
 - Run `copilot --version` in the same shell you launch the bot from
 - If it prompts to install/reinstall, restart your terminal (PATH update) and try again
-- If it still points to the shim, set `Bot:CopilotCliPath` to the full `copilot.exe` path
+- If it still points to a shim, set `COPILOT_CLI_PATH` to the full binary path
 
 ### Permission prompt too vague
 
-The Copilot SDK is preview and permission payload fields can vary. You can temporarily enable:
+The Copilot SDK is in preview and permission payload fields can vary. Enable:
 
-- `Bot:DebugPermissionPayload=true`
+- `DEBUG_PERMISSION_PAYLOAD=true`
 
-This adds a redacted debug panel to permission prompts.
+This adds a debug panel to permission prompts.
 
 ### Auto-approve policy (per session)
 
@@ -200,4 +226,6 @@ This adds a redacted debug panel to permission prompts.
 
 Enable the GitHub MCP server for a session:
 
-`cp config set {"model":"gpt-5.2","mcpServers":{"github":{"type":"http","url":"https://api.githubcopilot.com/mcp/","tools":["*"]}}}`
+```
+cp config set {"model":"gpt-5.2","mcpServers":{"github":{"type":"http","url":"https://api.githubcopilot.com/mcp/","tools":["*"]}}}
+```

@@ -1,0 +1,1 @@
+{"version":3,"file":"SessionRecord.d.ts","sourceRoot":"","sources":["../../src/models/SessionRecord.ts"],"names":[],"mappings":"AAAA,MAAM,WAAW,aAAa;IAC5B,QAAQ,EAAE,MAAM,CAAC;IACjB,OAAO,EAAE,MAAM,CAAC;IAChB,eAAe,EAAE,MAAM,CAAC;IACxB,gBAAgB,EAAE,MAAM,CAAC;IACzB,QAAQ,EAAE,MAAM,GAAG,IAAI,CAAC;IACxB,UAAU,EAAE,MAAM,CAAC;IACnB,UAAU,EAAE,IAAI,CAAC;IACjB,UAAU,EAAE,IAAI,CAAC;CAClB"}

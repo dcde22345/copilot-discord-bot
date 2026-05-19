@@ -1,0 +1,8 @@
+# Bot behaviour configuration
+# Changes take effect on the next restart.
+
+# When true, the bot shows an emoji repo-picker after creating a new session thread
+# so the user can choose which repo Copilot works in.
+# When false, the bot skips the picker and uses REPOS_ROOT as the working directory,
+# going straight into the conversation.
+requireRepoSelection: false
